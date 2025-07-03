@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1005955402295",
+    "project_id": "patient-dashboard-app-dc122",
+    "storage_bucket": "patient-dashboard-app-dc122.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1005955402295:android:7923c252b2978584e80db2",
+        "android_client_info": {
+          "package_name": "pheonix.app.patient"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1005955402295-evfuab9raqffchgglodj788lc3dsto4i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "pheonix.app.patient",
+            "certificate_hash": "8727d3d13ecc8c12274eb8ca995eb5af00bfeb6a"
+          }
+        },
+        {
+          "client_id": "1005955402295-aai5p06gpa7q8qo17ojqv0icntp5ltu7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCk2G1Pbh53IpXEzCbeCSLfsyts4hH8L4Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1005955402295-aai5p06gpa7q8qo17ojqv0icntp5ltu7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
