@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.services)
     kotlin("kapt")
+    alias(libs.plugins.serialization)
 }
 
 android {
@@ -87,6 +88,15 @@ dependencies {
 
     // Material Icons Extended
     implementation(libs.androidx.material.icons.extended)
+
+    // Coil
+    implementation(libs.coil.compose)
+
+    // Ktor
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.json)
+    implementation(libs.ktor.client.logging)
 
     // Testing
     testImplementation(libs.junit)

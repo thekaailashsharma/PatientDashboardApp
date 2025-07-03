@@ -2,19 +2,24 @@ package pheonix.app.patient.presentation.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import pheonix.app.patient.presentation.auth.AuthViewModel
 import pheonix.app.patient.presentation.auth.LoginScreen
+import pheonix.app.patient.presentation.home.HomeScreen
+import pheonix.app.patient.presentation.profile.DoctorProfileScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
+    object DoctorProfile : Screen("doctor_profile")
     object Home : Screen("home")
+    object Appointments : Screen("appointments")
+    object Chat : Screen("chat")
+    object Profile : Screen("profile")
 }
 
 @Composable
@@ -27,7 +32,8 @@ fun NavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        modifier = Modifier
     ) {
         composable(
             route = Screen.Login.route,
@@ -42,18 +48,6 @@ fun NavGraph(
                     towards = AnimatedContentTransitionScope.SlideDirection.Left,
                     animationSpec = tween(300)
                 )
-            },
-            popEnterTransition = {
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                    animationSpec = tween(300)
-                )
-            },
-            popExitTransition = {
-                slideOutOfContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                    animationSpec = tween(300)
-                )
             }
         ) {
             LoginScreen(
@@ -62,8 +56,39 @@ fun NavGraph(
                     authViewModel.signInWithGoogle(credential)
                 },
                 onNavigateToHome = {
+                    // Check if profile is complete before navigating
+                    if (authState.currentUser?.isProfileComplete == true) {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Screen.DoctorProfile.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.DoctorProfile.route,
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
+            DoctorProfileScreen(
+                onNavigateToHome = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                        popUpTo(Screen.DoctorProfile.route) { inclusive = true }
                     }
                 }
             )
@@ -84,7 +109,28 @@ fun NavGraph(
                 )
             }
         ) {
-            // HomeScreen will be implemented later
+            HomeScreen(
+                navController = navController
+            )
+        }
+
+        composable(route = Screen.Appointments.route) {
+            // AppointmentsScreen will be implemented later
+        }
+
+        composable(route = Screen.Chat.route) {
+            // ChatScreen will be implemented later
+        }
+
+        composable(route = Screen.Profile.route) {
+            DoctorProfileScreen(
+                isEditMode = true,
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Profile.route)
+                    }
+                }
+            )
         }
     }
 } 
