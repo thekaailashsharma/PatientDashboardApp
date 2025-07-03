@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -38,6 +39,7 @@ fun LoginScreen(
 ) {
     val context = LocalContext.current
     val googleSignInClient = state.googleSignInClient
+    var showOnboarding by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -45,18 +47,20 @@ fun LoginScreen(
         if (result.resultCode == Activity.RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
+                showOnboarding = true
                 val account = task.getResult(ApiException::class.java)
                 val credential = GoogleAuthProvider.getCredential(account.idToken, null)
                 onGoogleSignInClick(credential)
             } catch (e: ApiException) {
                 e.printStackTrace()
+                showOnboarding = false
             }
         }
     }
 
     LaunchedEffect(state.currentUser) {
-        if (state.currentUser != null) {
-            onNavigateToHome()
+        if (state.currentUser != null && !showOnboarding) {
+            showOnboarding = true
         }
     }
 
@@ -72,86 +76,107 @@ fun LoginScreen(
                 )
             )
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+        AnimatedVisibility(
+            visible = showOnboarding,
+            enter = fadeIn(animationSpec = tween(500)),
+            exit = fadeOut(animationSpec = tween(500))
         ) {
-            // Top Section with Marquee and Animation
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    // Marquee Text Animation
-                    MarqueeText(
-                        texts = listOf(
-                            "Welcome to Patient Dashboard",
-                            "Your Health Companion",
-                            "Track Your Health Journey",
-                            "Connect with Doctors"
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Doctor Animation
-                    val composition by rememberLottieComposition(
-                        spec = LottieCompositionSpec.RawRes(R.raw.doctor_animation)
-                    )
-                    LottieAnimation(
-                        composition = composition,
-                        iterations = LottieConstants.IterateForever,
-                        modifier = Modifier
-                            .size(240.dp)
-                            .padding(16.dp)
-                    )
+            OnboardingAnimation(
+                onFinished = {
+                    onNavigateToHome()
                 }
-            }
+            )
+        }
 
-            // Bottom Section with Sign In
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(0.8f)
-                    .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
+        AnimatedVisibility(
+            visible = !showOnboarding,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
+                // Top Section with Marquee and Animation
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Get Started",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        // Marquee Text Animation
+                        MarqueeText(
+                            texts = listOf(
+                                "Welcome to Patient Dashboard",
+                                "Your Health Companion",
+                                "Track Your Health Journey",
+                                "Connect with Doctors"
+                            )
+                        )
 
-                    Text(
-                        text = "Sign in to access your personalized healthcare dashboard",
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+                        Spacer(modifier = Modifier.height(32.dp))
 
-                    SocialSignInButton(
-                        text = "Continue with Google",
-                        icon = painterResource(R.drawable.google),
-                        isLoading = state.isLoading,
-                        onClick = {
-                            launcher.launch(googleSignInClient.signInIntent)
-                        }
-                    )
+                        // Doctor Animation
+                        val composition by rememberLottieComposition(
+                            spec = LottieCompositionSpec.RawRes(R.raw.doctor_animation)
+                        )
+                        LottieAnimation(
+                            composition = composition,
+                            iterations = LottieConstants.IterateForever,
+                            modifier = Modifier
+                                .size(240.dp)
+                                .padding(16.dp)
+                        )
+                    }
+                }
+
+                // Bottom Section with Sign In
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.8f)
+                        .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Text(
+                            text = "Get Started",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "Sign in to access your personalized healthcare dashboard",
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+
+                        SocialSignInButton(
+                            text = "Continue with Google",
+                            icon = painterResource(R.drawable.google),
+                            isLoading = state.isLoading,
+                            onClick = {
+                                launcher.launch(googleSignInClient.signInIntent)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth(0.85f)
+                                .height(56.dp)
+                        )
+                    }
                 }
             }
         }
