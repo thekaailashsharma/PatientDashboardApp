@@ -15,14 +15,14 @@ data class Shipment(
     val updatedAt: Date = Date(),
     val notes: String? = null
 ) {
-    enum class ShipmentStatus {
-        PENDING,
-        PROCESSING,
-        SHIPPED,
-        IN_TRANSIT,
-        OUT_FOR_DELIVERY,
-        DELIVERED,
-        CANCELLED
+    enum class ShipmentStatus(val shipmentValue: String) {
+        PENDING("Pending"),
+        PROCESSING("Processing"),
+        SHIPPED("Shipped"),
+        IN_TRANSIT("In Transit"),
+        OUT_FOR_DELIVERY("Out for Delivery"),
+        DELIVERED("Delivered"),
+        CANCELLED("Cancelled")
     }
 }
 

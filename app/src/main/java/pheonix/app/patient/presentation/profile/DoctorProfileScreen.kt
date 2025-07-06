@@ -30,6 +30,7 @@ import com.airbnb.lottie.compose.*
 import kotlinx.coroutines.launch
 import pheonix.app.patient.R
 import pheonix.app.patient.data.model.User
+import pheonix.app.patient.presentation.auth.AuthViewModel
 import pheonix.app.patient.presentation.components.BottomSheetContent
 import pheonix.app.patient.presentation.components.CustomTextField
 import pheonix.app.patient.presentation.components.PrimaryButton
@@ -39,8 +40,10 @@ import pheonix.app.patient.presentation.components.SelectionList
 @Composable
 fun DoctorProfileScreen(
     viewModel: DoctorProfileViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel(),
     isEditMode: Boolean = false,
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: () -> Unit,
+    onNavigateToLogin: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val addressPredictions by viewModel.addressPredictions.collectAsState()
@@ -50,6 +53,7 @@ fun DoctorProfileScreen(
         skipPartiallyExpanded = false,
     )
 
+    var showLogoutDialog by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(false) }
     var fullName by remember { mutableStateOf(uiState.user?.fullName ?: "") }
     var phone by remember { mutableStateOf(uiState.user?.phone ?: "") }
@@ -162,6 +166,34 @@ fun DoctorProfileScreen(
         }
     }
 
+    // Logout Dialog
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Logout") },
+            text = { Text("Are you sure you want to logout?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        authViewModel.signOut()
+                        onNavigateToLogin()
+                        showLogoutDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Logout")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -174,6 +206,24 @@ fun DoctorProfileScreen(
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Top Bar with Logout Button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(
+                    onClick = { showLogoutDialog = true }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Logout,
+                        contentDescription = "Logout",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+
             // Profile Image Section
             Box(
                 modifier = Modifier
