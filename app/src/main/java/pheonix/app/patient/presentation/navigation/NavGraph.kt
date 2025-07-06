@@ -42,16 +42,14 @@ sealed class Screen(val route: String) {
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String,
-    modifier: Modifier = Modifier
+    startDestination: String = Screen.Home.route
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsState()
 
     NavHost(
         navController = navController,
-        startDestination = startDestination,
-        modifier = modifier
+        startDestination = startDestination
     ) {
         composable(Screen.Login.route) {
             LoginScreen(
@@ -169,6 +167,7 @@ fun NavGraph(
             }
         ) {
             AppointmentsScreen(
+                navController = navController,
                 viewModel = hiltViewModel(),
                 onNavigateToAppointmentDetails = { appointmentId ->
                     navController.navigate(Screen.AppointmentDetails.createRoute(appointmentId))

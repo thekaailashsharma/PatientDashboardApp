@@ -22,6 +22,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.navigation.NavController
+import pheonix.app.patient.presentation.navigation.BottomNavigation
 
 enum class AppointmentTab {
     TODAY, UPCOMING, PAST
@@ -34,6 +36,7 @@ enum class SortOption {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AppointmentsScreen(
+    navController: NavController,
     viewModel: AppointmentsViewModel = hiltViewModel(),
     onNavigateToAppointmentDetails: (String) -> Unit,
     onNavigateToCreateAppointment: () -> Unit,
@@ -75,7 +78,7 @@ fun AppointmentsScreen(
                         }
                     }
                 )
-                
+
                 // Tabs
                 TabRow(
                     selectedTabIndex = selectedTab.ordinal,
@@ -335,4 +338,4 @@ fun AppointmentsScreen(
             }
         }
     }
-} 
+}
