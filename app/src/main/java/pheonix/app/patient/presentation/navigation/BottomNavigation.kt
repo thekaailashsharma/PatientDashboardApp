@@ -17,6 +17,7 @@ sealed class BottomNavItem(
     val icon: ImageVector
 ) {
     object Home : BottomNavItem(Screen.Home.route, "Home", Icons.Default.Home)
+    object Appointments : BottomNavItem(Screen.Appointments.route, "Appts", Icons.Default.CalendarToday)
     object Patients : BottomNavItem(Screen.Patients.route, "Patients", Icons.Default.Person)
     object Shipments : BottomNavItem(Screen.Shipments.route, "Shipments", Icons.Default.LocalShipping)
     object Profile : BottomNavItem(Screen.DoctorProfile.route, "Profile", Icons.Default.AccountCircle)
@@ -29,6 +30,7 @@ fun BottomNavigation(
 ) {
     val items = listOf(
         BottomNavItem.Home,
+        BottomNavItem.Appointments,
         BottomNavItem.Patients,
         BottomNavItem.Shipments,
         BottomNavItem.Profile
