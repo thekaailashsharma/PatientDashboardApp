@@ -16,7 +16,8 @@ import javax.inject.Singleton
 
 @Singleton
 class PatientRepositoryImpl @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val appointmentRepository: AppointmentRepository
 ) : PatientRepository {
 
     private val patientsCollection = firestore.collection("patients")
@@ -97,10 +98,10 @@ class PatientRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updatePatient(patient: Patient): Result<Unit> = try {
-        patientsCollection.document(patient.id)
-            .set(patient.copy(updatedAt = Date()))
-            .await()
-        Result.success(Unit)
+        patient.id?.let { id ->
+            patientsCollection.document(id).set(patient).await()
+            Result.success(Unit)
+        } ?: Result.failure(IllegalArgumentException("Patient ID cannot be null"))
     } catch (e: Exception) {
         Result.failure(e)
     }
@@ -196,5 +197,30 @@ class PatientRepositoryImpl @Inject constructor(
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
+    }
+
+    override suspend fun createPatient(patient: Patient): Result<Unit> = try {
+        val docRef = patientsCollection.add(patient).await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override fun getPatients(): Flow<List<Patient>> = callbackFlow {
+        val listenerRegistration = patientsCollection
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val patients = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(Patient::class.java)?.copy(id = doc.id)
+                } ?: emptyList()
+                
+                trySend(patients)
+            }
+
+        awaitClose { listenerRegistration.remove() }
     }
 } 

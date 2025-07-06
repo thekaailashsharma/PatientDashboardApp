@@ -16,10 +16,10 @@ sealed class BottomNavItem(
     val title: String,
     val icon: ImageVector
 ) {
-    object Home : BottomNavItem("home", "Home", Icons.Default.Home)
-    object Appointments : BottomNavItem("appointments", "Appointments", Icons.Default.CalendarToday)
-    object Chat : BottomNavItem("chat", "Chat", Icons.Default.Chat)
-    object Profile : BottomNavItem("profile", "Profile", Icons.Default.Person)
+    object Home : BottomNavItem(Screen.Home.route, "Home", Icons.Default.Home)
+    object Patients : BottomNavItem(Screen.Patients.route, "Patients", Icons.Default.Person)
+    object Shipments : BottomNavItem(Screen.Shipments.route, "Shipments", Icons.Default.LocalShipping)
+    object Profile : BottomNavItem(Screen.DoctorProfile.route, "Profile", Icons.Default.AccountCircle)
 }
 
 @Composable
@@ -29,8 +29,8 @@ fun BottomNavigation(
 ) {
     val items = listOf(
         BottomNavItem.Home,
-        BottomNavItem.Appointments,
-        BottomNavItem.Chat,
+        BottomNavItem.Patients,
+        BottomNavItem.Shipments,
         BottomNavItem.Profile
     )
 

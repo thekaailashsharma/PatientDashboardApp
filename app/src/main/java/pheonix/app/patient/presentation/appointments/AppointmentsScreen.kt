@@ -40,7 +40,8 @@ fun AppointmentsScreen(
     viewModel: AppointmentsViewModel = hiltViewModel(),
     onNavigateToAppointmentDetails: (String) -> Unit,
     onNavigateToCreateAppointment: () -> Unit,
-    onNavigateToEditAppointment: (String) -> Unit
+    onNavigateToEditAppointment: (String) -> Unit,
+    onNavigateToPatientProfile: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -158,7 +159,8 @@ fun AppointmentsScreen(
                                 onDeleteClick = {
                                     appointmentToDelete = appointment
                                     showDeleteDialog = true
-                                }
+                                },
+                                onPatientClick = onNavigateToPatientProfile
                             )
                         }
                     }

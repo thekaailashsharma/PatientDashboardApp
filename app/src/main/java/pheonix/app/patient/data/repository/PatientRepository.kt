@@ -19,4 +19,7 @@ interface PatientRepository {
     suspend fun updatePatientLastVisit(patientId: String, lastVisitDate: Date): Result<Unit>
     suspend fun addMedicalCondition(patientId: String, condition: String, date: Date, notes: String?): Result<Unit>
     suspend fun updateEmergencyContact(patientId: String, name: String, relationship: String, phone: String, address: String?): Result<Unit>
+
+    suspend fun createPatient(patient: Patient): Result<Unit>
+    fun getPatients(): Flow<List<Patient>>
 } 

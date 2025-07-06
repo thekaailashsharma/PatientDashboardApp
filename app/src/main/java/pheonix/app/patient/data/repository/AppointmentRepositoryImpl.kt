@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import pheonix.app.patient.data.model.Appointment
+import pheonix.app.patient.data.model.Patient
 import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
@@ -174,5 +175,50 @@ class AppointmentRepositoryImpl @Inject constructor(
             }
 
         awaitClose { registration.remove() }
+    }
+
+    override suspend fun updateAppointmentsForPatient(patient: Patient): Result<Unit> {
+        return try {
+            // Get all appointments for this patient
+            val appointments = appointmentsCollection
+                .whereEqualTo("patientId", patient.id)
+                .get()
+                .await()
+                .documents
+                .mapNotNull { it.toObject(Appointment::class.java) }
+
+            // Update each appointment with new patient details
+            appointments.forEach { appointment ->
+                appointmentsCollection.document(appointment.id)
+                    .update(
+                        mapOf(
+                            "patientName" to patient.name,
+                            "patientPhotoUrl" to patient.photoUrl
+                        )
+                    )
+                    .await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override fun getAppointments(): Flow<List<Appointment>> = callbackFlow {
+        val listenerRegistration = firestore.collection("appointments")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val appointments = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(Appointment::class.java)?.copy(id = doc.id)
+                } ?: emptyList()
+                
+                trySend(appointments)
+            }
+
+        awaitClose { listenerRegistration.remove() }
     }
 } 

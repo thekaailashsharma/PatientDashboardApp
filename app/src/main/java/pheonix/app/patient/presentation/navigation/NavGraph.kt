@@ -1,5 +1,7 @@
 package pheonix.app.patient.presentation.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -12,12 +14,16 @@ import androidx.navigation.navArgument
 import pheonix.app.patient.presentation.appointments.AppointmentsScreen
 import pheonix.app.patient.presentation.appointments.create.CreateAppointmentScreen
 import pheonix.app.patient.presentation.appointments.details.AppointmentDetailsScreen
+import pheonix.app.patient.presentation.appointments.edit.EditAppointmentScreen
 import pheonix.app.patient.presentation.auth.AuthViewModel
 import pheonix.app.patient.presentation.auth.LoginScreen
 import pheonix.app.patient.presentation.auth.SignUpScreen
 import pheonix.app.patient.presentation.home.HomeScreen
 import pheonix.app.patient.presentation.patients.AddEditPatientScreen
 import pheonix.app.patient.presentation.patients.PatientsScreen
+import pheonix.app.patient.presentation.patients.PatientProfileScreen
+import pheonix.app.patient.presentation.profile.DoctorProfileScreen
+import pheonix.app.patient.presentation.shipments.ShipmentsScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -28,19 +34,27 @@ sealed class Screen(val route: String) {
     object AppointmentDetails : Screen("appointment_details/{appointmentId}") {
         fun createRoute(appointmentId: String) = "appointment_details/$appointmentId"
     }
+
     object EditAppointment : Screen("edit_appointment/{appointmentId}") {
         fun createRoute(appointmentId: String) = "edit_appointment/$appointmentId"
     }
+
     object Patients : Screen("patients")
-    object AddPatient : Screen("add_patient?fromAppointment={fromAppointment}") {
-        fun createRoute(fromAppointment: Boolean = false) = "add_patient?fromAppointment=$fromAppointment"
+    object AddEditPatient :
+        Screen("add_edit_patient?patientId={patientId}&fromAppointment={fromAppointment}") {
+        fun createRoute(patientId: String? = null, fromAppointment: Boolean = false) =
+            "add_edit_patient?patientId=$patientId&fromAppointment=$fromAppointment"
     }
-    object EditPatient : Screen("edit_patient/{patientId}") {
-        fun createRoute(patientId: String) = "edit_patient/$patientId"
+
+    object PatientProfile : Screen("patient_profile/{patientId}") {
+        fun createRoute(patientId: String) = "patient_profile/$patientId"
     }
+
     object DoctorProfile : Screen("doctor_profile")
+    object Shipments : Screen("shipments")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavGraph(
     navController: NavHostController,
@@ -86,15 +100,7 @@ fun NavGraph(
 
         composable(Screen.Home.route) {
             HomeScreen(
-                onNavigateToAppointments = {
-                    navController.navigate(Screen.Appointments.route)
-                },
-                onNavigateToPatients = {
-                    navController.navigate(Screen.Patients.route)
-                },
-                onNavigateToProfile = {
-                    navController.navigate(Screen.DoctorProfile.route)
-                }
+                navController = navController
             )
         }
 
@@ -109,6 +115,9 @@ fun NavGraph(
                 },
                 onNavigateToEditAppointment = { appointmentId ->
                     navController.navigate(Screen.EditAppointment.createRoute(appointmentId))
+                },
+                onNavigateToPatientProfile = { patientId ->
+                    navController.navigate(Screen.PatientProfile.createRoute(patientId))
                 }
             )
         }
@@ -122,7 +131,7 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onNavigateToAddPatient = {
-                    navController.navigate(Screen.AddPatient.createRoute(fromAppointment = true))
+                    navController.navigate(Screen.AddEditPatient.createRoute(fromAppointment = true))
                 }
             )
         }
@@ -133,10 +142,30 @@ fun NavGraph(
                 navArgument("appointmentId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val appointmentId = backStackEntry.arguments?.getString("appointmentId") ?: return@composable
+            val appointmentId =
+                backStackEntry.arguments?.getString("appointmentId") ?: return@composable
             AppointmentDetailsScreen(
                 appointmentId = appointmentId,
                 onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.EditAppointment.route,
+            arguments = listOf(
+                navArgument("appointmentId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val appointmentId =
+                backStackEntry.arguments?.getString("appointmentId") ?: return@composable
+            EditAppointmentScreen(
+                appointmentId = appointmentId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onAppointmentUpdated = {
                     navController.popBackStack()
                 }
             )
@@ -146,47 +175,66 @@ fun NavGraph(
         composable(Screen.Patients.route) {
             PatientsScreen(
                 onNavigateToAddPatient = {
-                    navController.navigate(Screen.AddPatient.route)
+                    navController.navigate(Screen.AddEditPatient.createRoute())
                 },
                 onNavigateToEditPatient = { patientId ->
-                    navController.navigate(Screen.EditPatient.createRoute(patientId))
+                    navController.navigate(Screen.AddEditPatient.createRoute(patientId))
                 }
             )
         }
 
         composable(
-            route = Screen.AddPatient.route,
+            route = Screen.AddEditPatient.route,
             arguments = listOf(
+                navArgument("patientId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
                 navArgument("fromAppointment") {
                     type = NavType.BoolType
                     defaultValue = false
                 }
             )
         ) { backStackEntry ->
-            val fromAppointment = backStackEntry.arguments?.getBoolean("fromAppointment") ?: false
+            val fromAppointment = backStackEntry.arguments?.getBoolean("fromAppointment") == true
             AddEditPatientScreen(
                 onNavigateBack = {
                     navController.popBackStack()
-                },
-                onPatientAdded = {
-                    if (fromAppointment) {
-                        navController.popBackStack()
-                    }
                 }
             )
         }
 
         composable(
-            route = Screen.EditPatient.route,
+            route = Screen.PatientProfile.route,
             arguments = listOf(
                 navArgument("patientId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val patientId = backStackEntry.arguments?.getString("patientId")
-            AddEditPatientScreen(
+            val patientId = backStackEntry.arguments?.getString("patientId") ?: return@composable
+            PatientProfileScreen(
                 patientId = patientId,
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToEdit = {
+                    navController.navigate(Screen.AddEditPatient.createRoute(patientId))
+                }
+            )
+        }
+
+        composable(Screen.DoctorProfile.route) {
+            DoctorProfileScreen(
+                onNavigateToHome = {
+                    navController.popBackStack()
+                },
+            )
+        }
+
+        composable(Screen.Shipments.route) {
+            ShipmentsScreen(
+                onNavigateToPatient = { patientId ->
+                    navController.navigate(Screen.PatientProfile.createRoute(patientId))
                 }
             )
         }

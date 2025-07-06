@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -33,6 +34,7 @@ fun AppointmentCard(
     onClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onPatientClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showActions by remember { mutableStateOf(false) }
@@ -111,29 +113,53 @@ fun AppointmentCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Patient/Doctor Info and Type
+            // Patient Info and Type
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Patient/Doctor Info
+                // Patient Info with Avatar
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onPatientClick(appointment.patientId) }
                 ) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = appointment.patientName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    // Patient Avatar with First Letter
+                    Surface(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = appointment.patientName.firstOrNull()?.uppercase() ?: "?",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    Column {
+                        Text(
+                            text = appointment.patientName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "View Profile",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
 
                 // Appointment Type
@@ -227,9 +253,6 @@ fun AppointmentCard(
                     Appointment.AppointmentStatus.SCHEDULED,
                     Appointment.AppointmentStatus.CONFIRMED,
                     Appointment.AppointmentStatus.IN_PROGRESS,
-                    Appointment.AppointmentStatus.COMPLETED,
-                    Appointment.AppointmentStatus.CANCELLED,
-                    Appointment.AppointmentStatus.NO_SHOW
                 )
                 
                 statuses.forEach { status ->

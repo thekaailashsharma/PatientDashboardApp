@@ -230,9 +230,10 @@ fun AppointmentDetailsScreen(
                                         Appointment.AppointmentStatus.SCHEDULED -> MaterialTheme.colorScheme.primaryContainer
                                         Appointment.AppointmentStatus.CONFIRMED -> MaterialTheme.colorScheme.tertiaryContainer
                                         Appointment.AppointmentStatus.IN_PROGRESS -> MaterialTheme.colorScheme.secondaryContainer
-                                        Appointment.AppointmentStatus.COMPLETED -> MaterialTheme.colorScheme.primaryContainer
-                                        Appointment.AppointmentStatus.CANCELLED -> MaterialTheme.colorScheme.errorContainer
-                                        Appointment.AppointmentStatus.NO_SHOW -> MaterialTheme.colorScheme.errorContainer
+                                        Appointment.AppointmentStatus.COMPLETED -> MaterialTheme.colorScheme.onPrimaryContainer
+                                        Appointment.AppointmentStatus.CANCELLED -> MaterialTheme.colorScheme.onSecondaryContainer
+                                        Appointment.AppointmentStatus.NO_SHOW -> MaterialTheme.colorScheme.onTertiaryContainer
+                                        Appointment.AppointmentStatus.RESCHEDULED -> MaterialTheme.colorScheme.onErrorContainer
                                     }
                                 ) {
                                     Text(
@@ -242,12 +243,13 @@ fun AppointmentDetailsScreen(
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = when (appointment.status) {
-                                            Appointment.AppointmentStatus.SCHEDULED -> MaterialTheme.colorScheme.primary
-                                            Appointment.AppointmentStatus.CONFIRMED -> MaterialTheme.colorScheme.tertiary
-                                            Appointment.AppointmentStatus.IN_PROGRESS -> MaterialTheme.colorScheme.secondary
-                                            Appointment.AppointmentStatus.COMPLETED -> MaterialTheme.colorScheme.primary
-                                            Appointment.AppointmentStatus.CANCELLED -> MaterialTheme.colorScheme.error
-                                            Appointment.AppointmentStatus.NO_SHOW -> MaterialTheme.colorScheme.error
+                                            Appointment.AppointmentStatus.SCHEDULED -> MaterialTheme.colorScheme.primaryContainer
+                                            Appointment.AppointmentStatus.CONFIRMED -> MaterialTheme.colorScheme.tertiaryContainer
+                                            Appointment.AppointmentStatus.IN_PROGRESS -> MaterialTheme.colorScheme.secondaryContainer
+                                            Appointment.AppointmentStatus.COMPLETED -> MaterialTheme.colorScheme.onPrimaryContainer
+                                            Appointment.AppointmentStatus.CANCELLED -> MaterialTheme.colorScheme.onSecondaryContainer
+                                            Appointment.AppointmentStatus.NO_SHOW -> MaterialTheme.colorScheme.onTertiaryContainer
+                                            Appointment.AppointmentStatus.RESCHEDULED -> MaterialTheme.colorScheme.onErrorContainer
                                         }
                                     )
                                 }

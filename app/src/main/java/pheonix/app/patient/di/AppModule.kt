@@ -15,12 +15,7 @@ import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import pheonix.app.patient.data.api.PlacesApiService
-import pheonix.app.patient.data.repository.AppointmentRepository
-import pheonix.app.patient.data.repository.AppointmentRepositoryImpl
-import pheonix.app.patient.data.repository.AuthRepository
-import pheonix.app.patient.data.repository.AuthRepositoryImpl
-import pheonix.app.patient.data.repository.PatientRepository
-import pheonix.app.patient.data.repository.PatientRepositoryImpl
+import pheonix.app.patient.data.repository.*
 import javax.inject.Singleton
 
 @Module
@@ -52,8 +47,15 @@ object AppModule {
     @Provides
     @Singleton
     fun providePatientRepository(
+        firestore: FirebaseFirestore,
+        appointmentRepository: AppointmentRepository
+    ): PatientRepository = PatientRepositoryImpl(firestore, appointmentRepository)
+
+    @Provides
+    @Singleton
+    fun provideShipmentRepository(
         firestore: FirebaseFirestore
-    ): PatientRepository = PatientRepositoryImpl(firestore)
+    ): ShipmentRepository = ShipmentRepositoryImpl(firestore)
 
     @Provides
     @Singleton

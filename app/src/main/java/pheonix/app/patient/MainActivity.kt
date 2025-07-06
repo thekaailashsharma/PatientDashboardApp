@@ -1,8 +1,10 @@
 package pheonix.app.patient
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,6 +23,7 @@ import pheonix.app.patient.ui.theme.PatientDashboardAppTheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -35,7 +38,7 @@ class MainActivity : ComponentActivity() {
 
                     // Control bottom bar visibility
                     val showBottomBar = when (currentRoute) {
-                        Screen.Home.route, Screen.Appointments.route -> true
+                        Screen.Home.route, Screen.Appointments.route, Screen.Patients.route, Screen.Shipments.route, Screen.DoctorProfile.route -> true
                         else -> false
                     }
 

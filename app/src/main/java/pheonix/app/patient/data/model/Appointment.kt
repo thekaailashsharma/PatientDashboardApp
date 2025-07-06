@@ -66,6 +66,7 @@ data class Appointment(
         IN_PROGRESS,
         COMPLETED,
         CANCELLED,
-        NO_SHOW
+        NO_SHOW,
+        RESCHEDULED
     }
 } 

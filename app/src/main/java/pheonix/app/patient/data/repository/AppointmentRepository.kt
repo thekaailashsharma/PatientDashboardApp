@@ -3,6 +3,7 @@ package pheonix.app.patient.data.repository
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.Flow
 import pheonix.app.patient.data.model.Appointment
+import pheonix.app.patient.data.model.Patient
 import java.util.Date
 
 interface AppointmentRepository {
@@ -21,4 +22,8 @@ interface AppointmentRepository {
     ): Flow<List<Appointment>>
     
     fun getAppointmentsByStatus(status: Appointment.AppointmentStatus): Flow<List<Appointment>>
+    
+    suspend fun updateAppointmentsForPatient(patient: Patient): Result<Unit>
+    
+    fun getAppointments(): Flow<List<Appointment>>
 } 
