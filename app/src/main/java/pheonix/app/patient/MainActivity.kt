@@ -35,8 +35,7 @@ class MainActivity : ComponentActivity() {
 
                     // Control bottom bar visibility
                     val showBottomBar = when (currentRoute) {
-                        Screen.Home.route, Screen.Appointments.route,
-                        Screen.Chat.route, Screen.Profile.route -> true
+                        Screen.Home.route, Screen.Appointments.route -> true
                         else -> false
                     }
 

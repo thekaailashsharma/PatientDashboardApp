@@ -28,6 +28,7 @@ fun CustomTextField(
     onTrailingIconClick: (() -> Unit)? = null,
     isPassword: Boolean = false,
     errorMessage: String? = null,
+    helperText: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     enabled: Boolean = true,
@@ -118,22 +119,19 @@ fun CustomTextField(
                 focusedTrailingIconColor = MaterialTheme.colorScheme.primary,
                 unfocusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
             ),
-            isError = errorMessage != null
-        )
-
-        AnimatedVisibility(
-            visible = errorMessage != null,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
-        ) {
-            if (errorMessage != null) {
-                Text(
-                    text = errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                )
+            isError = errorMessage != null,
+            supportingText = {
+                when {
+                    errorMessage != null -> Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    helperText != null -> Text(
+                        text = helperText,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-        }
+        )
     }
 } 

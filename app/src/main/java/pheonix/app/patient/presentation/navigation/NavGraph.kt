@@ -1,9 +1,8 @@
 package pheonix.app.patient.presentation.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.tween
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -13,36 +12,39 @@ import androidx.navigation.navArgument
 import pheonix.app.patient.presentation.appointments.AppointmentsScreen
 import pheonix.app.patient.presentation.appointments.create.CreateAppointmentScreen
 import pheonix.app.patient.presentation.appointments.details.AppointmentDetailsScreen
-import pheonix.app.patient.presentation.appointments.edit.EditAppointmentScreen
 import pheonix.app.patient.presentation.auth.AuthViewModel
 import pheonix.app.patient.presentation.auth.LoginScreen
 import pheonix.app.patient.presentation.auth.SignUpScreen
 import pheonix.app.patient.presentation.home.HomeScreen
-import pheonix.app.patient.presentation.profile.DoctorProfileScreen
+import pheonix.app.patient.presentation.patients.AddEditPatientScreen
+import pheonix.app.patient.presentation.patients.PatientsScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object SignUp : Screen("signup")
     object Home : Screen("home")
-    object DoctorProfile : Screen("doctor_profile")
     object Appointments : Screen("appointments")
+    object CreateAppointment : Screen("create_appointment")
     object AppointmentDetails : Screen("appointment_details/{appointmentId}") {
         fun createRoute(appointmentId: String) = "appointment_details/$appointmentId"
     }
-
-    object CreateAppointment : Screen("create_appointment")
     object EditAppointment : Screen("edit_appointment/{appointmentId}") {
         fun createRoute(appointmentId: String) = "edit_appointment/$appointmentId"
     }
-
-    object Chat : Screen("chat")
-    object Profile : Screen("profile")
+    object Patients : Screen("patients")
+    object AddPatient : Screen("add_patient?fromAppointment={fromAppointment}") {
+        fun createRoute(fromAppointment: Boolean = false) = "add_patient?fromAppointment=$fromAppointment"
+    }
+    object EditPatient : Screen("edit_patient/{patientId}") {
+        fun createRoute(patientId: String) = "edit_patient/$patientId"
+    }
+    object DoctorProfile : Screen("doctor_profile")
 }
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Home.route
+    startDestination: String = Screen.Login.route
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsState()
@@ -58,122 +60,52 @@ fun NavGraph(
                     authViewModel.signInWithGoogle(credential)
                 },
                 onNavigateToHome = {
-                    // Check if profile is complete before navigating
-                    if (authState.currentUser?.isProfileComplete == true) {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                        }
-                    } else {
-                        navController.navigate(Screen.DoctorProfile.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                        }
-                    }
-                }
-            )
-        }
-
-        composable(
-            route = Screen.DoctorProfile.route,
-            enterTransition = {
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(300)
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(300)
-                )
-            }
-        ) {
-            DoctorProfileScreen(
-                onNavigateToHome = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.DoctorProfile.route) { inclusive = true }
-                        launchSingleTop = true
+                        popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(
-            route = Screen.EditAppointment.route,
-            arguments = listOf(
-                navArgument("appointmentId") {
-                    type = NavType.StringType
-                }
-            )
-        ) { backStackEntry ->
-            val appointmentId =
-                backStackEntry.arguments?.getString("appointmentId") ?: return@composable
-            EditAppointmentScreen(
-                appointmentId = appointmentId,
-                onNavigateBack = {
+        composable(Screen.SignUp.route) {
+            SignUpScreen(
+                state = authState,
+                onSignUpClick = { email, password, name ->
+                    authViewModel.signUpWithEmail(email, password, name)
+                },
+                onNavigateToLogin = {
                     navController.popBackStack()
                 },
-                onAppointmentUpdated = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(route = Screen.Chat.route) {
-            // ChatScreen will be implemented later
-        }
-
-        composable(route = Screen.Profile.route) {
-            DoctorProfileScreen(
-                isEditMode = true,
                 onNavigateToHome = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Profile.route)
+                        popUpTo(Screen.SignUp.route) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(
-            route = Screen.Home.route,
-            enterTransition = {
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(300)
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(300)
-                )
-            }
-        ) {
-            HomeScreen(navController = navController)
+        composable(Screen.Home.route) {
+            HomeScreen(
+                onNavigateToAppointments = {
+                    navController.navigate(Screen.Appointments.route)
+                },
+                onNavigateToPatients = {
+                    navController.navigate(Screen.Patients.route)
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.DoctorProfile.route)
+                }
+            )
         }
 
-        composable(
-            route = Screen.Appointments.route,
-            enterTransition = {
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(300)
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(300)
-                )
-            }
-        ) {
+        composable(Screen.Appointments.route) {
             AppointmentsScreen(
                 navController = navController,
-                viewModel = hiltViewModel(),
-                onNavigateToAppointmentDetails = { appointmentId ->
-                    navController.navigate(Screen.AppointmentDetails.createRoute(appointmentId))
-                },
                 onNavigateToCreateAppointment = {
                     navController.navigate(Screen.CreateAppointment.route)
+                },
+                onNavigateToAppointmentDetails = { appointmentId ->
+                    navController.navigate(Screen.AppointmentDetails.createRoute(appointmentId))
                 },
                 onNavigateToEditAppointment = { appointmentId ->
                     navController.navigate(Screen.EditAppointment.createRoute(appointmentId))
@@ -181,27 +113,16 @@ fun NavGraph(
             )
         }
 
-        composable(
-            route = Screen.CreateAppointment.route,
-            enterTransition = {
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(300)
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(300)
-                )
-            }
-        ) {
+        composable(Screen.CreateAppointment.route) {
             CreateAppointmentScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
                 onAppointmentCreated = {
                     navController.popBackStack()
+                },
+                onNavigateToAddPatient = {
+                    navController.navigate(Screen.AddPatient.createRoute(fromAppointment = true))
                 }
             )
         }
@@ -209,26 +130,61 @@ fun NavGraph(
         composable(
             route = Screen.AppointmentDetails.route,
             arguments = listOf(
-                navArgument("appointmentId") {
-                    type = NavType.StringType
-                }
-            ),
-            enterTransition = {
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(300)
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(300)
-                )
-            }
+                navArgument("appointmentId") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val appointmentId = backStackEntry.arguments?.getString("appointmentId") ?: return@composable
             AppointmentDetailsScreen(
                 appointmentId = appointmentId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // Add Patients routes
+        composable(Screen.Patients.route) {
+            PatientsScreen(
+                onNavigateToAddPatient = {
+                    navController.navigate(Screen.AddPatient.route)
+                },
+                onNavigateToEditPatient = { patientId ->
+                    navController.navigate(Screen.EditPatient.createRoute(patientId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.AddPatient.route,
+            arguments = listOf(
+                navArgument("fromAppointment") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val fromAppointment = backStackEntry.arguments?.getBoolean("fromAppointment") ?: false
+            AddEditPatientScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onPatientAdded = {
+                    if (fromAppointment) {
+                        navController.popBackStack()
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.EditPatient.route,
+            arguments = listOf(
+                navArgument("patientId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val patientId = backStackEntry.arguments?.getString("patientId")
+            AddEditPatientScreen(
+                patientId = patientId,
                 onNavigateBack = {
                     navController.popBackStack()
                 }

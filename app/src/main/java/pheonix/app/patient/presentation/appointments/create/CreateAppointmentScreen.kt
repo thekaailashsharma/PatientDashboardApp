@@ -1,7 +1,12 @@
 package pheonix.app.patient.presentation.appointments.create
 
+import androidx.compose.animation.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,9 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.firebase.Timestamp
 import pheonix.app.patient.data.model.Appointment
+import pheonix.app.patient.data.model.Patient
+import pheonix.app.patient.presentation.patients.components.PatientCard
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -22,12 +30,15 @@ import java.util.*
 fun CreateAppointmentScreen(
     viewModel: CreateAppointmentViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit,
-    onAppointmentCreated: () -> Unit
+    onAppointmentCreated: () -> Unit,
+    onNavigateToAddPatient: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val patients by viewModel.patients.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
     val scrollState = rememberScrollState()
 
-    var patientName by remember { mutableStateOf("") }
+    var showPatientSearch by remember { mutableStateOf(false) }
     var appointmentType by remember { mutableStateOf(Appointment.AppointmentType.IN_PERSON) }
     var selectedDate by remember { mutableStateOf<Date>(Date()) }
     var selectedTime by remember { mutableStateOf<Date>(Date()) }
@@ -37,6 +48,9 @@ fun CreateAppointmentScreen(
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+
+    // Get selected patient
+    val selectedPatient = patients.find { it.id == uiState.selectedPatientId }
 
     LaunchedEffect(uiState.isAppointmentCreated) {
         if (uiState.isAppointmentCreated) {
@@ -68,16 +82,74 @@ fun CreateAppointmentScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Patient Name
-                OutlinedTextField(
-                    value = patientName,
-                    onValueChange = { patientName = it },
-                    label = { Text("Patient Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = {
-                        Icon(Icons.Default.Person, contentDescription = null)
+                // Patient Selection
+                OutlinedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showPatientSearch = true }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Patient",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        if (selectedPatient != null) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = selectedPatient.name,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Change patient",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Select a patient",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Select patient",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     }
-                )
+                }
 
                 // Appointment Type
                 Column {
@@ -202,7 +274,7 @@ fun CreateAppointmentScreen(
                 // Create Button
                 Button(
                     onClick = {
-                        if (selectedDate != null && selectedTime != null) {
+                        if (selectedDate != null && selectedTime != null && selectedPatient != null) {
                             val calendar = Calendar.getInstance().apply {
                                 time = selectedDate!!
                                 val timeCalendar = Calendar.getInstance().apply { time = selectedTime!! }
@@ -212,7 +284,8 @@ fun CreateAppointmentScreen(
 
                             viewModel.createAppointment(
                                 Appointment(
-                                    patientName = patientName,
+                                    patientId = selectedPatient.id,
+                                    patientName = selectedPatient.name,
                                     type = appointmentType,
                                     scheduledFor = calendar.time,
                                     duration = duration,
@@ -223,7 +296,7 @@ fun CreateAppointmentScreen(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = patientName.isNotBlank() && selectedDate != null && selectedTime != null
+                    enabled = selectedPatient != null && selectedDate != null && selectedTime != null
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(
@@ -232,6 +305,73 @@ fun CreateAppointmentScreen(
                         )
                     } else {
                         Text("Create Appointment")
+                    }
+                }
+            }
+
+            // Patient Search Dialog
+            if (showPatientSearch) {
+                Dialog(
+                    onDismissRequest = { showPatientSearch = false }
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.8f),
+                        shape = MaterialTheme.shapes.large
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = "Select Patient",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { viewModel.updateSearchQuery(it) },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Search patients...") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Search, contentDescription = null)
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            LazyColumn(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(patients) { patient ->
+                                    PatientListItem(
+                                        patient = patient,
+                                        onClick = {
+                                            viewModel.selectPatient(patient.id)
+                                            showPatientSearch = false
+                                        }
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedButton(
+                                onClick = {
+                                    showPatientSearch = false
+                                    onNavigateToAddPatient()
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Add New Patient")
+                            }
+                        }
                     }
                 }
             }
@@ -302,6 +442,68 @@ fun CreateAppointmentScreen(
             }
         ) {
             TimePicker(state = timePickerState)
+        }
+    }
+}
+
+@Composable
+private fun PatientListItem(
+    patient: Patient,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                modifier = Modifier
+                    .size(40.dp),
+                shape = CircleShape,
+                color = when (patient.status) {
+                    Patient.PatientStatus.ACTIVE -> MaterialTheme.colorScheme.primaryContainer
+                    Patient.PatientStatus.INACTIVE -> MaterialTheme.colorScheme.surfaceVariant
+                    Patient.PatientStatus.BLOCKED -> MaterialTheme.colorScheme.errorContainer
+                }
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = when (patient.status) {
+                            Patient.PatientStatus.ACTIVE -> MaterialTheme.colorScheme.onPrimaryContainer
+                            Patient.PatientStatus.INACTIVE -> MaterialTheme.colorScheme.onSurfaceVariant
+                            Patient.PatientStatus.BLOCKED -> MaterialTheme.colorScheme.onErrorContainer
+                        }
+                    )
+                }
+            }
+
+            Column {
+                Text(
+                    text = patient.name,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                patient.contactNumber?.let { phone ->
+                    Text(
+                        text = phone,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }

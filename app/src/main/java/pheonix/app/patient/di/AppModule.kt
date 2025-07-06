@@ -19,6 +19,8 @@ import pheonix.app.patient.data.repository.AppointmentRepository
 import pheonix.app.patient.data.repository.AppointmentRepositoryImpl
 import pheonix.app.patient.data.repository.AuthRepository
 import pheonix.app.patient.data.repository.AuthRepositoryImpl
+import pheonix.app.patient.data.repository.PatientRepository
+import pheonix.app.patient.data.repository.PatientRepositoryImpl
 import javax.inject.Singleton
 
 @Module
@@ -46,6 +48,12 @@ object AppModule {
     fun provideAppointmentRepository(
         firestore: FirebaseFirestore
     ): AppointmentRepository = AppointmentRepositoryImpl(firestore)
+
+    @Provides
+    @Singleton
+    fun providePatientRepository(
+        firestore: FirebaseFirestore
+    ): PatientRepository = PatientRepositoryImpl(firestore)
 
     @Provides
     @Singleton

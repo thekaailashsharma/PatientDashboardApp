@@ -106,4 +106,11 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Calendar Dialog
+    implementation("com.maxkeppeler.sheets-compose-dialogs:core:1.2.1")
+    implementation("com.maxkeppeler.sheets-compose-dialogs:calendar:1.2.1")
+
+    // Accompanist
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.32.0")
 }
