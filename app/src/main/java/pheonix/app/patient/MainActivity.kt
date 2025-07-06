@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import pheonix.app.patient.presentation.navigation.NavGraph
+import pheonix.app.patient.presentation.navigation.Screen
 import pheonix.app.patient.ui.theme.PatientDashboardAppTheme
 
 @AndroidEntryPoint
@@ -23,7 +24,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    NavGraph(navController = navController)
+                    NavGraph(navController = navController, startDestination = Screen.Login.route)
                 }
             }
         }

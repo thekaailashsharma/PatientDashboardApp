@@ -99,6 +99,12 @@ fun DoctorProfileScreen(
         }
     }
 
+    LaunchedEffect(uiState.isProfileSaved) {
+        if (uiState.isProfileSaved) {
+            onNavigateToHome()
+        }
+    }
+
     fun validateInputs(): Boolean {
         var isValid = true
 

@@ -145,7 +145,8 @@ class DoctorProfileViewModel @Inject constructor(
                     it.copy(
                         user = userToUpdate,
                         isLoading = false,
-                        isProfileUpdateSuccessful = true
+                        isProfileUpdateSuccessful = true,
+                        isProfileSaved = true
                     )
                 }
             } catch (e: Exception) {
@@ -165,14 +166,15 @@ class DoctorProfileViewModel @Inject constructor(
     }
 
     fun resetUpdateStatus() {
-        _uiState.update { it.copy(isProfileUpdateSuccessful = false) }
+        _uiState.update { it.copy(isProfileUpdateSuccessful = false, isProfileSaved = false) }
     }
 
     data class DoctorProfileState(
         val user: User? = null,
         val isLoading: Boolean = false,
         val error: String? = null,
-        val isProfileUpdateSuccessful: Boolean = false
+        val isProfileUpdateSuccessful: Boolean = false,
+        val isProfileSaved: Boolean = false
     )
 
     companion object {
